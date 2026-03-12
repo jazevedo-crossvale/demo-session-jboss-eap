@@ -34,7 +34,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Pull base images from Red Hat Registry
+        run: |
+          docker pull registry.redhat.io/jboss-eap-8/eap8-openjdk17-builder-openshift-rhel9:latest
+          docker pull registry.redhat.io/jboss-eap-8/eap8-openjdk17-runtime-openshift-rhel9:latest
+
       - name: Build and push
+        env:
+          DOCKER_BUILDKIT: "0"
         run: |
           docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
             demo-jboss-session/session-demo
