@@ -1,17 +1,13 @@
-# Use the official Red Hat JBoss EAP 8 application builder image
-FROM registry.redhat.io/jboss-eap-8/eap8-openjdk17-builder-openshift-rhel9:latest AS builder
-
-# Note: The S2I tools usually do the build automatically, but keeping it simple for a Dockerfile.
-# You can also use a generic Maven builder and then copy the WAR to the EAP runtime.
-USER root
-RUN mkdir -p /tmp/src
+# Stage 1: Build the WAR with Maven (public Eclipse Temurin JDK image)
+FROM eclipse-temurin:17-jdk AS builder
+RUN apt-get update && apt-get install -y maven
 WORKDIR /tmp/src
 COPY pom.xml .
 COPY src ./src
 RUN mvn clean package
 
-# Use the official Red Hat EAP 8 runtime image
-FROM registry.redhat.io/jboss-eap-8/eap8-openjdk17-runtime-openshift-rhel9:latest
+# Stage 2: Run on WildFly (public image, no credentials needed)
+FROM quay.io/wildfly/wildfly:36.0.1.Final-jdk17
 
-# Copy the generated WAR file into the WildFly deployments folder
-COPY --from=builder /tmp/src/target/session-demo.war /opt/eap/standalone/deployments/
+# Copy the generated WAR file into WildFly deployments
+COPY --from=builder /tmp/src/target/session-demo.war /opt/jboss/wildfly/standalone/deployments/
