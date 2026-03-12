@@ -45,6 +45,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Log in to Red Hat Registry
+        uses: docker/login-action@v3
+        with:
+          registry: registry.redhat.io
+          username: ${{ secrets.REDHAT_REGISTRY_USER }}
+          password: ${{ secrets.REDHAT_REGISTRY_PASSWORD }}
+
       # You need a Dockerfile in your project to use this step.
       # You can generate a basic Dockerfile that copies your WAR file into the EAP image.
       - name: Build and push Docker image
