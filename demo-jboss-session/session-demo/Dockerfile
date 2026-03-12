@@ -1,11 +1,8 @@
-# Stage 1: Build the WAR with Maven using the WildFly S2I builder image
+# Stage 1: S2I build — runs Maven and deploys WAR into WildFly at /opt/server
 FROM quay.io/wildfly/wildfly-s2i:latest AS builder
-USER root
-WORKDIR /tmp/src
-COPY pom.xml .
-COPY src ./src
-RUN mvn clean package
+COPY --chown=jboss:root . /tmp/src/
+RUN /usr/local/s2i/assemble
 
-# Stage 2: Lightweight WildFly runtime image (auto-configures HotRod from Service Binding)
+# Stage 2: Runtime — copy the provisioned WildFly server with the deployed WAR
 FROM quay.io/wildfly/wildfly-runtime:latest
-COPY --from=builder /tmp/src/target/session-demo.war /opt/server/standalone/deployments/
+COPY --from=builder /opt/server /opt/server
