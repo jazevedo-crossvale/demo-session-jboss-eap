@@ -20,13 +20,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Log in to Red Hat Registry
-        uses: docker/login-action@v3
-        with:
-          registry: registry.redhat.io
-          username: ${{ secrets.REDHAT_REGISTRY_USER }}
-          password: ${{ secrets.REDHAT_REGISTRY_PASSWORD }}
-
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -34,14 +27,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Pull base images from Red Hat Registry
-        run: |
-          docker pull registry.redhat.io/jboss-eap-8/eap8-openjdk17-builder-openshift-rhel9:latest
-          docker pull registry.redhat.io/jboss-eap-8/eap8-openjdk17-runtime-openshift-rhel9:latest
-
       - name: Build and push
-        env:
-          DOCKER_BUILDKIT: "0"
         run: |
           docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
             demo-jboss-session/session-demo
