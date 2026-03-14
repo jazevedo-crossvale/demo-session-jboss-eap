@@ -13,7 +13,7 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <version.wildfly.maven.plugin>4.1.7.Final-redhat-00002</version.wildfly.maven.plugin>
+        <version.eap.maven.plugin>2.0.1.Final-redhat-00006</version.eap.maven.plugin>
         <version.eap.cloud.galleon.pack>2.0.0.Final-redhat-00021</version.eap.cloud.galleon.pack>
     </properties>
 
@@ -67,7 +67,7 @@
             </plugin>
 
             <!--
-                wildfly-maven-plugin provisions a trimmed EAP 8 server into target/server
+                eap-maven-plugin provisions a trimmed EAP 8 server into target/server
                 at build time. The S2I assemble script picks up target/server automatically.
 
                 Layers:
@@ -76,9 +76,9 @@
                                    management capability (remote-cache-container support)
             -->
             <plugin>
-                <groupId>org.wildfly.plugins</groupId>
-                <artifactId>wildfly-maven-plugin</artifactId>
-                <version>${version.wildfly.maven.plugin}</version>
+                <groupId>org.jboss.eap.plugins</groupId>
+                <artifactId>eap-maven-plugin</artifactId>
+                <version>${version.eap.maven.plugin}</version>
                 <configuration>
                     <feature-packs>
                         <feature-pack>
