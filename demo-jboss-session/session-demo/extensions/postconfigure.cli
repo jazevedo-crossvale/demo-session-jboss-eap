@@ -1,0 +1,43 @@
+# postconfigure.cli — executed by the EAP 8 S2I assemble script at image build time.
+#
+# The ${env.ISPN_*} expressions are stored as literal strings in standalone.xml
+# and resolved by WildFly against actual environment variables at pod startup.
+# This means the image is portable: inject ISPN_HOST/ISPN_USER/ISPN_PASS as env
+# vars in the WildFlyServer CR without rebuilding the image.
+#
+# Prerequisites (provided by the web-clustering Galleon layer):
+#   - distributable-web subsystem is present
+#   - infinispan subsystem is present with remote-cache-container capability
+
+batch
+
+# ── Step 1: Outbound socket binding to Infinispan / Data Grid ────────────────
+/socket-binding-group=standard-sockets/remote-destination-outbound-socket-binding=remote-datagrid:add(\
+    host=${env.ISPN_HOST:session-grid}, \
+    port=11222)
+
+# ── Step 2: Remote cache container ───────────────────────────────────────────
+/subsystem=infinispan/remote-cache-container=web-sessions:add(\
+    default-remote-cluster=data-grid, \
+    marshaller=PROTOSTREAM, \
+    statistics-enabled=true, \
+    properties={\
+        infinispan.client.hotrod.auth_username=${env.ISPN_USER:developer}, \
+        infinispan.client.hotrod.auth_password=${env.ISPN_PASS:changeme}, \
+        infinispan.client.hotrod.sasl_mechanism=SCRAM-SHA-256\
+    })
+
+/subsystem=infinispan/remote-cache-container=web-sessions/remote-cluster=data-grid:add(\
+    socket-bindings=[remote-datagrid])
+
+# ── Step 3: HotRod session management profile ─────────────────────────────────
+/subsystem=distributable-web/hotrod-session-management=remote-sm:add(\
+    remote-cache-container=web-sessions, \
+    granularity=SESSION)
+
+/subsystem=distributable-web/hotrod-session-management=remote-sm/affinity=local:add()
+
+# Make remote-sm the server-wide default for all deployments
+/subsystem=distributable-web:write-attribute(name=default-session-management, value=remote-sm)
+
+run-batch

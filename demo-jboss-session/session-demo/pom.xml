@@ -13,8 +13,8 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <version.wildfly.maven.plugin>5.0.0.Final</version.wildfly.maven.plugin>
-        <version.eap.cloud.galleon.pack>8.0.0.GA-redhat-00014</version.eap.cloud.galleon.pack>
+        <version.wildfly.maven.plugin>4.1.7.Final-redhat-00002</version.wildfly.maven.plugin>
+        <version.eap.cloud.galleon.pack>2.0.0.Final-redhat-00021</version.eap.cloud.galleon.pack>
     </properties>
 
     <repositories>
