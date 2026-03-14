@@ -13,35 +13,41 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <version.eap.maven.plugin>2.0.1.Final-redhat-00006</version.eap.maven.plugin>
-        <version.eap.cloud.galleon.pack>2.0.0.Final-redhat-00021</version.eap.cloud.galleon.pack>
+        <!-- matches official EAP 8.0 quickstart (eap-8.0 channel resolves galleon pack versions) -->
+        <version.eap.maven.plugin>1.0.0.Final-redhat-00014</version.eap.maven.plugin>
     </properties>
 
     <repositories>
         <repository>
-            <id>redhat-ga</id>
-            <name>Red Hat GA Repository</name>
+            <id>jboss-public-maven-repository</id>
+            <name>JBoss Public Maven Repository</name>
+            <url>https://repository.jboss.org/nexus/content/groups/public/</url>
+            <releases><enabled>true</enabled><updatePolicy>never</updatePolicy></releases>
+            <snapshots><enabled>true</enabled><updatePolicy>never</updatePolicy></snapshots>
+        </repository>
+        <repository>
+            <id>redhat-ga-maven-repository</id>
+            <name>Red Hat GA Maven Repository</name>
             <url>https://maven.repository.redhat.com/ga/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
+            <releases><enabled>true</enabled><updatePolicy>never</updatePolicy></releases>
+            <snapshots><enabled>true</enabled><updatePolicy>never</updatePolicy></snapshots>
         </repository>
     </repositories>
 
     <pluginRepositories>
         <pluginRepository>
-            <id>redhat-ga</id>
-            <name>Red Hat GA Repository</name>
+            <id>jboss-public-maven-repository</id>
+            <name>JBoss Public Maven Repository</name>
+            <url>https://repository.jboss.org/nexus/content/groups/public/</url>
+            <releases><enabled>true</enabled></releases>
+            <snapshots><enabled>true</enabled></snapshots>
+        </pluginRepository>
+        <pluginRepository>
+            <id>redhat-ga-maven-repository</id>
+            <name>Red Hat GA Maven Repository</name>
             <url>https://maven.repository.redhat.com/ga/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
+            <releases><enabled>true</enabled></releases>
+            <snapshots><enabled>true</enabled></snapshots>
         </pluginRepository>
     </pluginRepositories>
 
@@ -54,6 +60,7 @@
         </dependency>
     </dependencies>
 
+    <!-- Default build — plain WAR, used for local development -->
     <build>
         <finalName>session-demo</finalName>
         <plugins>
@@ -65,42 +72,60 @@
                     <failOnMissingWebXml>false</failOnMissingWebXml>
                 </configuration>
             </plugin>
-
-            <!--
-                eap-maven-plugin provisions a trimmed EAP 8 server into target/server
-                at build time. The S2I assemble script picks up target/server automatically.
-
-                Layers:
-                  cloud-server   — base EAP 8 server tuned for cloud/containers
-                  web-clustering — adds distributable-web subsystem with HotRod session
-                                   management capability (remote-cache-container support)
-            -->
-            <plugin>
-                <groupId>org.jboss.eap.plugins</groupId>
-                <artifactId>eap-maven-plugin</artifactId>
-                <version>${version.eap.maven.plugin}</version>
-                <configuration>
-                    <feature-packs>
-                        <feature-pack>
-                            <location>org.jboss.eap.cloud:eap-cloud-galleon-pack:${version.eap.cloud.galleon.pack}</location>
-                        </feature-pack>
-                    </feature-packs>
-                    <layers>
-                        <layer>cloud-server</layer>
-                        <layer>web-clustering</layer>
-                    </layers>
-                    <galleon-options>
-                        <jboss-fork-embedded>true</jboss-fork-embedded>
-                    </galleon-options>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>package</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!--
+            OpenShift profile — activated automatically by the EAP 8 S2I builder (mvn -Popenshift).
+            Uses eap-maven-plugin to provision a trimmed EAP 8 server via Galleon layers:
+              - eap-cloud-galleon-pack (resolved by eap-8.0 channel):
+                  * cloud-server    : base EAP 8 server tuned for cloud/containers
+                  * web-clustering  : adds distributable-web subsystem with HotRod session
+                                      management capability (remote-cache-container support)
+        -->
+        <profile>
+            <id>openshift</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jboss.eap.plugins</groupId>
+                        <artifactId>eap-maven-plugin</artifactId>
+                        <version>${version.eap.maven.plugin}</version>
+                        <configuration>
+                            <channels>
+                                <channel>
+                                    <manifest>
+                                        <groupId>org.jboss.eap.channels</groupId>
+                                        <artifactId>eap-8.0</artifactId>
+                                    </manifest>
+                                </channel>
+                            </channels>
+                            <feature-packs>
+                                <feature-pack>
+                                    <location>org.jboss.eap.cloud:eap-cloud-galleon-pack</location>
+                                </feature-pack>
+                            </feature-packs>
+                            <layers>
+                                <layer>cloud-server</layer>
+                                <layer>web-clustering</layer>
+                            </layers>
+                            <galleon-options>
+                                <jboss-fork-embedded>true</jboss-fork-embedded>
+                            </galleon-options>
+                            <deployment-runtime-scanners>false</deployment-runtime-scanners>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>package</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
 </project>
