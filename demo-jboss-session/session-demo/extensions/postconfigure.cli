@@ -24,7 +24,10 @@ batch
     properties={\
         infinispan.client.hotrod.auth_username=${env.ISPN_USER:developer}, \
         infinispan.client.hotrod.auth_password=${env.ISPN_PASS:changeme}, \
-        infinispan.client.hotrod.sasl_mechanism=SCRAM-SHA-256\
+        infinispan.client.hotrod.sasl_mechanism=SCRAM-SHA-256, \
+        infinispan.client.hotrod.use_ssl=true, \
+        infinispan.client.hotrod.trust_store_file_name=/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt, \
+        infinispan.client.hotrod.trust_store_type=pem\
     })
 
 /subsystem=infinispan/remote-cache-container=web-sessions/remote-cluster=data-grid:add(\
